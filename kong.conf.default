@@ -2168,3 +2168,14 @@
                                  #   Debug token will also be stored in a file located at
                                  #   `{prefix}/.request_debug_token` and updated
                                  #   when Kong starts, restarts, or reloads.
+#------------------------------------------------------------------------------
+# KONNECT LOG SHIPPING
+#------------------------------------------------------------------------------
+
+#error_log_pipe_path =
+                        # Path to named pipe for error
+                        # log shipping through vector.dev
+
+                        # If this option is set, vector.dev
+                        # will be started and all error logs
+                        # will also be sent.
