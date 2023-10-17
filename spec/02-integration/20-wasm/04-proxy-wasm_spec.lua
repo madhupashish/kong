@@ -8,6 +8,8 @@ local HEADER_NAME_INPUT = "X-PW-Input"
 local HEADER_NAME_DISPATCH_ECHO = "X-PW-Dispatch-Echo"
 local HEADER_NAME_ADD_REQ_HEADER = "X-PW-Add-Header"
 local HEADER_NAME_ADD_RESP_HEADER = "X-PW-Add-Resp-Header"
+local HEADER_NAME_LUA_PROPERTY = "X-Lua-Property"
+local HEADER_NAME_LUA_VALUE = "X-Lua-Value"
 
 local DNS_HOSTNAME = "wasm.test"
 local MOCK_UPSTREAM_DNS_ADDR = DNS_HOSTNAME .. ":" .. helpers.mock_upstream_port
@@ -63,6 +65,58 @@ describe("proxy-wasm filters (#wasm) (#" .. strategy .. ")", function()
       },
     })
 
+    local r_lua = assert(bp.routes:insert {
+      paths = { "/lua" },
+      strip_path = true,
+      service = mock_service,
+    })
+
+    assert(bp.filter_chains:insert {
+      route = r_lua,
+      filters = {
+        { name = "tests" },
+      },
+    })
+
+    assert(bp.plugins:insert {
+      name = "pre-function",
+      config = {
+        access = {([[
+          local property = kong.request.get_header(%q)
+
+          if property then
+            local value = kong.request.get_header(%q)
+            kong.log.notice("Setting kong.ctx.shared.", property, " to '", value, "'")
+            kong.ctx.shared[property] = value
+          end
+          ]]):format(HEADER_NAME_LUA_PROPERTY, HEADER_NAME_LUA_VALUE)
+        },
+      },
+    })
+
+    assert(bp.plugins:insert {
+      name = "post-function",
+      config = {
+        header_filter = {([[
+          local property = kong.request.get_header(%q)
+          if property then
+            local value = kong.ctx.shared[property]
+            local header = %q
+
+            if value then
+              kong.log.notice("Setting ", header, " response header to '", value, "'")
+              kong.response.set_header(header, value)
+            else
+              kong.log.notice("Clearing ", header, " response header")
+              kong.response.clear_header(header)
+            end
+          end
+          ]]):format(HEADER_NAME_LUA_PROPERTY, HEADER_NAME_LUA_VALUE)
+        },
+      },
+    })
+
+
     -- XXX our dns mock fixture doesn't work when called from wasm land
     hosts_file = os.tmpname()
     assert(helpers.file.write(hosts_file,
@@ -73,6 +127,7 @@ describe("proxy-wasm filters (#wasm) (#" .. strategy .. ")", function()
       nginx_conf = "spec/fixtures/custom_nginx.template",
       wasm = true,
       dns_hostsfile = hosts_file,
+      plugins = "pre-function,post-function",
     }))
   end)
 
@@ -292,6 +347,72 @@ describe("proxy-wasm filters (#wasm) (#" .. strategy .. ")", function()
 
       local body = assert.res_status(200, res)
       assert.equal(mock_service.id, body)
+      assert.logfile().has.no.line("[error]", true, 0)
+      assert.logfile().has.no.line("[crit]",  true, 0)
+    end)
+
+    it("read kong.ctx.shared[<attr>]", function()
+      local client = helpers.proxy_client()
+      finally(function() client:close() end)
+
+      local res = assert(client:send {
+        method = "GET",
+        path = "/lua/status/200",
+        headers = {
+          [HEADER_NAME_LUA_PROPERTY] = "foo",
+          [HEADER_NAME_LUA_VALUE] = "bar",
+          [HEADER_NAME_TEST] = "get_kong_property",
+          [HEADER_NAME_INPUT] = "ctx.shared.foo",
+          [HEADER_NAME_DISPATCH_ECHO] = "on",
+        }
+      })
+
+      local body = assert.res_status(200, res)
+      assert.equal("bar", body)
+      assert.logfile().has.no.line("[error]", true, 0)
+      assert.logfile().has.no.line("[crit]",  true, 0)
+    end)
+
+    it("write kong.ctx.shared[<attr>]", function()
+      local client = helpers.proxy_client()
+      finally(function() client:close() end)
+
+      local res = assert(client:send {
+        method = "GET",
+        path = "/lua/status/200",
+        headers = {
+          [HEADER_NAME_LUA_PROPERTY] = "foo",
+          [HEADER_NAME_TEST] = "set_kong_property",
+          [HEADER_NAME_INPUT] = "ctx.shared.foo=bar",
+          [HEADER_NAME_DISPATCH_ECHO] = "on",
+        }
+      })
+
+      assert.res_status(200, res)
+      local value = assert.response(res).has.header(HEADER_NAME_LUA_VALUE)
+      assert.same("bar", value)
+      assert.logfile().has.no.line("[error]", true, 0)
+      assert.logfile().has.no.line("[crit]",  true, 0)
+    end)
+
+    it("clear kong.ctx.shared[<attr>]", function()
+      local client = helpers.proxy_client()
+      finally(function() client:close() end)
+
+      local res = assert(client:send {
+        method = "GET",
+        path = "/lua/status/200",
+        headers = {
+          [HEADER_NAME_LUA_PROPERTY] = "foo",
+          [HEADER_NAME_LUA_VALUE] = "bar",
+          [HEADER_NAME_TEST] = "set_kong_property",
+          [HEADER_NAME_INPUT] = "ctx.shared.foo",
+          [HEADER_NAME_DISPATCH_ECHO] = "on",
+        }
+      })
+
+      assert.res_status(200, res)
+      assert.response(res).has.no.header(HEADER_NAME_LUA_VALUE)
       assert.logfile().has.no.line("[error]", true, 0)
       assert.logfile().has.no.line("[crit]",  true, 0)
     end)

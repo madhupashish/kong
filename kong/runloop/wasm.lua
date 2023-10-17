@@ -40,6 +40,7 @@ local json_schema = require "kong.db.schema.json"
 local pl_file = require "pl.file"
 local pl_path = require "pl.path"
 local constants = require "kong.constants"
+local properties = require "kong.runloop.wasm.properties"
 
 
 ---@module 'resty.wasmx.proxy_wasm'
@@ -678,6 +679,43 @@ local function disable(reason)
 end
 
 
+local function register_property_handlers()
+  properties.reset()
+
+  properties.add_getter("kong.route_id", function(_, _, ctx)
+    local value = ctx.route and ctx.route.id
+    local ok = value ~= nil
+    local const = ok
+    return ok, value, const
+  end)
+
+  properties.add_getter("kong.service_id", function(_, _, ctx)
+    local value = ctx.service and ctx.service.id
+    local ok = value ~= nil
+    local const = ok
+    return ok, value, const
+  end)
+
+  properties.add_getter("kong.version", function(kong)
+    return true, kong.version, true
+  end)
+
+  properties.add_namespace_handlers("kong.ctx.shared",
+    function(kong, _, _, key)
+      local value = kong.ctx.shared[key]
+      local ok = value ~= nil
+      value = ok and tostring(value) or nil
+      return ok, value, false
+    end,
+
+    function(kong, _, _, key, value)
+      kong.ctx.shared[key] = value
+      return true
+    end
+  )
+end
+
+
 local function enable(kong_config)
   set_available_filters(kong_config.wasm_modules_parsed)
 
@@ -685,6 +723,8 @@ local function enable(kong_config)
   _G.dns_client = _G.dns_client or dns(kong_config)
 
   proxy_wasm = proxy_wasm or require "resty.wasmx.proxy_wasm"
+
+  register_property_handlers()
 
   ENABLED = true
   STATUS = STATUS_ENABLED
@@ -742,18 +782,6 @@ function _M.init_worker()
 end
 
 
-local function set_proxy_wasm_property(property, value)
-  if not value then
-    return
-  end
-
-  local ok, err = proxy_wasm.set_property(property, value)
-  if not ok then
-    log(ERR, "failed to set proxy-wasm '", property, "' property: ", err)
-  end
-end
-
-
 ---
 -- Lookup and execute the filter chain that applies to the current request
 -- (if any).
@@ -784,8 +812,8 @@ function _M.attach(ctx)
     return kong.response.error(500)
   end
 
-  set_proxy_wasm_property("kong.route_id", ctx.route and ctx.route.id)
-  set_proxy_wasm_property("kong.service_id", ctx.service and ctx.service.id)
+  proxy_wasm.set_property_getter(properties.get)
+  proxy_wasm.set_property_setter(properties.set)
 
   ok, err = proxy_wasm.start()
   if not ok then
