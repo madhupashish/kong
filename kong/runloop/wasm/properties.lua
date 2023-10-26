@@ -6,7 +6,8 @@ local kong = kong
 local ngx = ngx
 
 
-local simple_handlers = {}
+local simple_getters = {}
+local simple_setters = {}
 local namespace_handlers = {}
 
 local get_namespace, rebuild_namespaces
@@ -46,7 +47,8 @@ end
 
 
 function _M.reset()
-  clear_tab(simple_handlers)
+  clear_tab(simple_getters)
+  clear_tab(simple_setters)
   clear_tab(namespace_handlers)
   rebuild_namespaces()
 end
@@ -56,7 +58,15 @@ function _M.add_getter(name, handler)
   assert(type(name) == "string")
   assert(type(handler) == "function")
 
-  simple_handlers[name] = handler
+  simple_getters[name] = handler
+end
+
+
+function _M.add_setter(name, handler)
+  assert(type(name) == "string")
+  assert(type(handler) == "function")
+
+  simple_setters[name] = handler
 end
 
 
@@ -64,6 +74,7 @@ function _M.add_namespace_handlers(name, get, set)
   assert(type(name) == "string")
   assert(type(get) == "function")
   assert(type(set) == "function")
+
   namespace_handlers[name] = { get = get, set = set }
   rebuild_namespaces()
 end
@@ -76,7 +87,7 @@ end
 function _M.get(name)
   local ok, value, const = false, nil, nil
 
-  local getter = simple_handlers[name]
+  local getter = simple_getters[name]
   if getter then
     ok, value, const = getter(kong, ngx, ngx.ctx)
 
@@ -100,9 +111,15 @@ end
 function _M.set(name, value)
   local ok, cached_value, const = false, nil, nil
 
-  local ns, key = get_namespace(name)
-  if ns then
-    ok, cached_value, const = ns.set(kong, ngx, ngx.ctx, key, value)
+  local setter = simple_setters[name]
+  if setter then
+    ok, cached_value, const = setter(kong, ngx, ngx.ctx, value)
+
+  else
+    local ns, key = get_namespace(name)
+    if ns then
+      ok, cached_value, const = ns.set(kong, ngx, ngx.ctx, key, value)
+    end
   end
 
   return ok, cached_value, const

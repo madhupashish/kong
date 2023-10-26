@@ -682,11 +682,101 @@ end
 local function register_property_handlers()
   properties.reset()
 
+  properties.add_getter("kong.client.protocol", function(kong)
+    return true, kong.client.get_protocol(), true
+  end)
+
+  properties.add_getter("kong.nginx.subsystem", function(kong)
+    return true, kong.nginx.get_subsystem(), true
+  end)
+
+  properties.add_getter("kong.node.id", function(kong)
+    return true, kong.node.get_id(), true
+  end)
+
+  properties.add_getter("kong.node.memory_stats", function(kong)
+    local stats = kong.node.get_memory_stats()
+    if not stats then
+      return false
+    end
+    return true, cjson_encode(stats), false
+  end)
+
+  properties.add_getter("kong.request.forwarded_host", function(kong)
+    return true, kong.request.get_forwarded_host(), true
+  end)
+
+  properties.add_getter("kong.request.forwarded_port", function(kong)
+    return true, kong.request.get_forwarded_port(), true
+  end)
+
+  properties.add_getter("kong.request.forwarded_scheme", function(kong)
+    return true, kong.request.get_forwarded_scheme(), true
+  end)
+
+  properties.add_getter("kong.request.port", function(kong)
+    return true, kong.request.get_port(), true
+  end)
+
+  properties.add_getter("kong.response.source", function(kong)
+    return true, kong.request.get_source(), false
+  end)
+
+  properties.add_setter("kong.response.status", function(kong, _, _, status)
+    return true, kong.response.set_status(tonumber(status)), false
+  end)
+
+  properties.add_getter("kong.router.route", function(kong)
+    local route = kong.router.get_route()
+    if not route then
+      return true, nil, true
+    end
+    return true, cjson_encode(route), true
+  end)
+
+  properties.add_getter("kong.router.service", function(kong)
+    local service = kong.router.get_service()
+    if not service then
+      return true, nil, true
+    end
+    return true, cjson_encode(service), true
+  end)
+
+  properties.add_setter("kong.service.target", function(kong, _, _, target)
+    local host, port = target:match("^(.*):([0-9]+)$")
+    port = tonumber(port)
+    if not (host and port) then
+      return false
+    end
+
+    kong.service.set_target(host, port)
+    return true, target, false
+  end)
+
+  properties.add_setter("kong.service.upstream", function(kong, _, _, upstream)
+    local ok, err = kong.service.set_upstream(upstream)
+    if not ok then
+      kong.log.err(err)
+      return false
+    end
+
+    return true, upstream, false
+  end)
+
+  properties.add_setter("kong.service.request.scheme", function(kong, _, _, scheme)
+    kong.service.request.set_scheme(scheme)
+    return true, scheme, false
+  end)
+
   properties.add_getter("kong.route_id", function(_, _, ctx)
     local value = ctx.route and ctx.route.id
     local ok = value ~= nil
     local const = ok
     return ok, value, const
+  end)
+
+  properties.add_getter("kong.service.response.status", function(kong)
+    return true, kong.service.response.get_status(), false
   end)
 
   properties.add_getter("kong.service_id", function(_, _, ctx)
@@ -711,6 +801,28 @@ local function register_property_handlers()
     function(kong, _, _, key, value)
       kong.ctx.shared[key] = value
       return true
+    end
+  )
+
+  properties.add_namespace_handlers("kong.configuration",
+    function(kong, _, _, key)
+      local value = kong.configuration[key]
+      if value ~= nil then
+        if type(value) == "table" then
+          value = cjson_decode(value)
+        else
+          value = tostring(value)
+        end
+
+        return true, value, true
+      end
+
+      return false
+    end,
+
+    function()
+      -- kong.configuration is read-only: setter rejects all
+      return false
     end
   )
 end
