@@ -530,6 +530,13 @@ server {
             Kong.serve_cluster_listener()
         }
     }
+
+    # rpc
+    location = /v2/outlet {
+        content_by_lua_block {
+            Kong.serve_rpc_listener()
+        }
+    }
 }
 > end -- role == "control_plane"
 
