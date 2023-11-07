@@ -462,7 +462,7 @@ function _M:select(req_method, req_uri, req_host, req_scheme,
         return nil, err
       end
 
-    elseif field == "net.port" then
+    elseif field == "net.dst.port" then
      assert(c:add_value(field, port))
 
     elseif field == "net.protocol" then
