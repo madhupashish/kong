@@ -207,7 +207,8 @@ local function categorize_fields(fields)
       queries[field:sub(PREFIX_LEN + 1)] = field
 
     else
-      table.insert(basic, field)
+      table.insert(basic, field) -- array for matching
+      basic[field] = true        -- hash  for cache calculation
     end
   end
 
