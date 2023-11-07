@@ -27,6 +27,12 @@ local function get_exp_and_priority(route)
     return
   end
 
+  if exp:find("net.port", 1, true) then
+    exp:gsub("net.port", "net.dst.port")
+    ngx.log(ngx.WARN, "The field 'net.port' of expression is deprecated, " ..
+                      "please use 'net.dst.port' instead.")
+  end
+
   local protocols = route.protocols
 
   -- give the chance for http redirection (301/302/307/308/426)
