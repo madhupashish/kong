@@ -434,13 +434,13 @@ local get_upstream_uri_v0  = utils.get_upstream_uri_v0
 
 
 function _M:select(req_method, req_uri, req_host, req_scheme,
-                   _, _,
-                   _, _,
+                   src_ip, src_port,
+                   dst_ip, dst_port,
                    sni, req_headers, req_queries)
 
   check_select_params(req_method, req_uri, req_host, req_scheme,
-                      nil, nil,
-                      nil, nil,
+                      src_ip, src_port,
+                      dst_ip, dst_port,
                       sni, req_headers, req_queries)
 
   local c = context.new(self.schema)
@@ -463,8 +463,8 @@ function _M:select(req_method, req_uri, req_host, req_scheme,
         return nil, err
       end
 
-    elseif field == "net.dst.port" then
-     assert(c:add_value(field, port))
+    --elseif field == "net.dst.port" then
+    -- assert(c:add_value(field, port))
 
     elseif field == "net.protocol" then
       assert(c:add_value(field, req_scheme))
@@ -474,6 +474,18 @@ function _M:select(req_method, req_uri, req_host, req_scheme,
       if not res then
         return nil, err
       end
+
+    elseif field == "net.dst.port" then
+      assert(c:add_value(field, port or dst_port))
+
+    elseif field == "net.dst.ip" then
+      assert(c:add_value(field, dst_ip))
+
+    elseif field == "net.src.port" then
+      assert(c:add_value(field, src_port))
+
+    elseif field == "net.src.ip" then
+      assert(c:add_value(field, src_ip))
 
     else  -- unknown field
       error("unknown router matching schema field: " .. field)
