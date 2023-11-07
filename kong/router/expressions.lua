@@ -28,7 +28,7 @@ local function get_exp_and_priority(route)
   end
 
   if exp:find("net.port", 1, true) then
-    exp:gsub("net.port", "net.dst.port")
+    exp:gsub("net%.port", "net.dst.port")
     ngx.log(ngx.WARN, "The field 'net.port' of expression is deprecated, " ..
                       "please use 'net.dst.port' instead.")
   end

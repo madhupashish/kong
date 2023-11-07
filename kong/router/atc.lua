@@ -679,6 +679,25 @@ function _M:exec(ctx)
 
   req_uri = strip_uri_args(req_uri)
 
+  local src_ip, src_port, dst_ip, dst_port
+  do
+    if self.fields["net.src.ip"] then
+      src_ip = var.remote_addr
+    end
+
+    if self.fields["net.src.port"] then
+      src_port = tonumber(var.remote_port, 10)
+    end
+
+    if self.fields["net.dst.ip"] then
+      dst_ip = var.server_addr
+    end
+
+    if self.fields["net.dst.port"] then
+      dst_port = tonumber(var.server_port, 10)
+    end
+  end
+
   -- cache lookup
 
   local cache_key = (req_method  or "") .. "|" ..
@@ -686,7 +705,11 @@ function _M:exec(ctx)
                     (req_host    or "") .. "|" ..
                     (sni         or "") .. "|" ..
                     (headers_key or "") .. "|" ..
-                    (queries_key or "")
+                    (queries_key or "") .. "|" ..
+                    (src_ip      or "") .. "|" ..
+                    (src_port    or "") .. "|" ..
+                    (dst_ip      or "") .. "|" ..
+                    (dst_port    or "")
 
   local match_t = self.cache:get(cache_key)
   if not match_t then
@@ -699,7 +722,7 @@ function _M:exec(ctx)
 
     local err
     match_t, err = self:select(req_method, req_uri, req_host, req_scheme,
-                               nil, nil, nil, nil,
+                               src_ip, src_port, dst_ip, dst_port,
                                sni, headers, queries)
     if not match_t then
       if err then
