@@ -67,7 +67,7 @@ do
                   "http.queries.*",
                  },
 
-    ["Int"]    = {"net.port",
+    ["Int"]    = {"net.src.port", "net.dst.port",
                  },
   }
 
@@ -706,6 +706,7 @@ function _M:exec(ctx)
                     (sni         or "") .. "|" ..
                     (headers_key or "") .. "|" ..
                     (queries_key or "") .. "|" ..
+                    -- below are ip related
                     (src_ip      or "") .. "|" ..
                     (src_port    or "") .. "|" ..
                     (dst_ip      or "") .. "|" ..
