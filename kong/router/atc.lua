@@ -185,11 +185,6 @@ end
 
 
 local function categorize_fields(fields)
-
-  if not is_http then
-    return fields, nil, nil
-  end
-
   local basic = {}
   local headers = {}
   local queries = {}
@@ -207,8 +202,7 @@ local function categorize_fields(fields)
       queries[field:sub(PREFIX_LEN + 1)] = field
 
     else
-      table.insert(basic, field) -- array for matching
-      basic[field] = true        -- hash  for cache calculation
+      basic[field] = true
     end
   end
 
@@ -447,7 +441,7 @@ function _M:select(req_method, req_uri, req_host, req_scheme,
 
   local host, port = split_host_port(req_host)
 
-  for _, field in ipairs(self.fields) do
+  for field, _ in pairs(self.fields) do
     if field == "http.method" then
       assert(c:add_value(field, req_method))
 
@@ -763,7 +757,7 @@ function _M:select(_, _, _, scheme,
 
   local c = context.new(self.schema)
 
-  for _, field in ipairs(self.fields) do
+  for field, _ in pairs(self.fields) do
     if field == "net.protocol" then
       assert(c:add_value(field, scheme))
 
