@@ -4,13 +4,20 @@ local deprecation = require("kong.deprecation")
 
 local validate_route
 do
-  local get_schema     = require("kong.router.atc").schema
-  local get_expression = require("kong.router.compat").get_expression
+  local get_schema        = require("kong.router.atc").schema
+  local get_expression    = require("kong.router.compat").get_expression
+  local verify_expression = require("kong.router.expressions").verify_expression
 
   -- works with both `traditional_compatiable` and `expressions` routes`
   validate_route = function(entity)
     local schema = get_schema(entity.protocols)
-    local exp = entity.expression or get_expression(entity)
+    local exp = entity.expression
+
+    if exp then
+      entity.expression = verify_expression(exp)
+    else
+      exp = get_expression(entity)
+    end
 
     local ok, err = router.validate(schema, exp)
     if not ok then
