@@ -2214,6 +2214,7 @@ describe("Configuration loader", function()
       local FIELDS = {
         -- CONF_BASIC
         prefix = true,
+        runtime_data_path = true,
         vaults = true,
         database = true,
         lmdb_environment_path = true,
@@ -2264,6 +2265,7 @@ describe("Configuration loader", function()
       }
       local conf = assert(conf_loader(nil, nil, { pre_cmd = true }))
       for k, _ in pairs(conf) do
+        print(k)
         assert.equal(true, FIELDS[k])
       end
     end)
