@@ -21,6 +21,10 @@ local PROTOCOLS_OVERRIDE = {
 
 -- net.port => net.dst.port
 local function verify_expression(exp)
+  if not exp then
+    return nil
+  end
+
   if exp:find("net.port", 1, true) then
     ngx.log(ngx.WARN, "The field 'net.port' of expression is deprecated, " ..
                       "please use 'net.dst.port' instead.")
