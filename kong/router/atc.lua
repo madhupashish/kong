@@ -441,7 +441,7 @@ function _M:select(req_method, req_uri, req_host, req_scheme,
 
   local host, port = split_host_port(req_host)
 
-  for field, _ in pairs(self.fields) do
+  for field in pairs(self.fields) do
     if field == "http.method" then
       assert(c:add_value(field, req_method))
 
@@ -757,7 +757,7 @@ function _M:select(_, _, _, scheme,
 
   local c = context.new(self.schema)
 
-  for field, _ in pairs(self.fields) do
+  for field in pairs(self.fields) do
     if field == "net.protocol" then
       assert(c:add_value(field, scheme))
 
@@ -815,19 +815,34 @@ end
 
 
 function _M:exec(ctx)
-  local src_ip   = var.remote_addr
-  local dst_ip   = var.server_addr
+  local src_ip, src_port, dst_ip, dst_port, sni
+  do
+    if self.fields["net.src.ip"] then
+      src_ip = var.remote_addr
+    end
 
-  local src_port = tonumber(var.remote_port, 10)
-  local dst_port = tonumber((ctx or ngx.ctx).host_port, 10) or
-                   tonumber(var.server_port, 10)
+    if self.fields["net.src.port"] then
+      src_port = tonumber(var.remote_port, 10)
+    end
 
-  -- error value for non-TLS connections ignored intentionally
-  local sni = server_name()
+    if self.fields["net.dst.ip"] then
+      dst_ip = var.server_addr
+    end
 
-  -- fallback to preread SNI if current connection doesn't terminate TLS
-  if not sni then
-    sni = var.ssl_preread_server_name
+    if self.fields["net.dst.port"] then
+      dst_port = tonumber((ctx or ngx.ctx).host_port, 10) or
+                 tonumber(var.server_port, 10)
+    end
+
+    if self.fields["tls.sni"] then
+      -- error value for non-TLS connections ignored intentionally
+      sni = server_name()
+
+      -- fallback to preread SNI if current connection doesn't terminate TLS
+      if not sni then
+        sni = var.ssl_preread_server_name
+      end
+    end
   end
 
   local scheme
