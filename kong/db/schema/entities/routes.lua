@@ -11,7 +11,7 @@ do
   -- works with both `traditional_compatiable` and `expressions` routes`
   validate_route = function(entity)
     local schema = get_schema(entity.protocols)
-    local exp = verify_expression(entity.expression) or get_expression(entity)
+    local exp = verify_expression(entity) or get_expression(entity)
 
     local ok, err = router.validate(schema, exp)
     if not ok then
