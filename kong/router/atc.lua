@@ -457,17 +457,14 @@ function _M:select(req_method, req_uri, req_host, req_scheme,
         return nil, err
       end
 
-    --elseif field == "net.dst.port" then
-    -- assert(c:add_value(field, port))
-
-    elseif field == "net.protocol" then
-      assert(c:add_value(field, req_scheme))
-
     elseif field == "tls.sni" then
       local res, err = c:add_value(field, sni)
       if not res then
         return nil, err
       end
+
+    elseif field == "net.protocol" then
+      assert(c:add_value(field, req_scheme))
 
     elseif field == "net.dst.port" then
       assert(c:add_value(field, port or dst_port))
