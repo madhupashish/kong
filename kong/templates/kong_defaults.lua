@@ -204,5 +204,6 @@ wasm_dynamic_module = NONE
 
 request_debug = on
 request_debug_token =
+enable_vector = false
 error_log_pipe_path =
 ]]
