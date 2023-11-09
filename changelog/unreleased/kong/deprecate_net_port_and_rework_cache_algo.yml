@@ -1,0 +1,6 @@
+message: |
+  deprecate the field `net.port`, convert it to `net.dst.port`
+  and make `net.src.*` and `net.dst.*` accessible in http as well,
+  in the meanwhile change the router cache algorithm.
+type: feature
+scope: Core
