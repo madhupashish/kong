@@ -812,7 +812,7 @@ end
 
 
 function _M:exec(ctx)
-  local src_ip, src_port, dst_ip, dst_port, sni
+  local src_ip, src_port, dst_ip, dst_port
   do
     if self.fields["net.src.ip"] then
       src_ip = var.remote_addr
