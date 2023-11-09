@@ -1510,4 +1510,30 @@ describe("routes schema (flavor = expressions)", function()
     -- verified by `schema/typedefs.lua`
     assert.truthy(errs["@entity"])
   end)
+
+  it("http route still supports net.port but with warning", function()
+    local route = {
+      id             = a_valid_uuid,
+      name           = "my_route",
+      protocols      = { "grpc" },
+      expression     = [[http.method == "GET" && net.port == 8000]],
+      priority       = 100,
+      service        = { id = another_uuid },
+    }
+    route = Routes:process_auto_fields(route, "insert")
+    assert.truthy(Routes:validate(route))
+  end)
+
+  it("http route supports net.src.* and net.dst.* fields", function()
+    local route = {
+      id             = a_valid_uuid,
+      name           = "my_route",
+      protocols      = { "https" },
+      expression     = [[http.method == "GET" && net.src.ip == 1.2.3.4 && net.src.port == 80]],
+      priority       = 100,
+      service        = { id = another_uuid },
+    }
+    route = Routes:process_auto_fields(route, "insert")
+    assert.truthy(Routes:validate(route))
+  end)
 end)

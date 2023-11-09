@@ -5305,11 +5305,11 @@ do
       local _ngx = mock_ngx("GET", "/foo", { host = "domain.org" })
       router._set_ngx(_ngx)
 
-      -- no port provided
+      -- no ip address provided
       local match_t = router:exec()
       assert.falsy(match_t)
 
-      -- var.server_port
+      -- ip address
       _ngx.var.remote_addr = "1.1.1.1"
       _ngx.var.server_addr = "2.2.2.2"
       router._set_ngx(_ngx)
