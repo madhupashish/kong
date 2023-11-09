@@ -262,6 +262,7 @@ jobs:
       with:
         name: ${{ env.FAILED_TEST_FILES_FILE }}
         path: ${{ env.FAILED_TEST_FILES_FILE }}
+        retention-days: 2
 
     - name: Archive coverage stats file
       uses: actions/upload-artifact@v3
