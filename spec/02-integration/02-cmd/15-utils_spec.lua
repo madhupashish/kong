@@ -1,11 +1,11 @@
-local signals = require "kong.cmd.utils.nginx_signals"
+local signals = require "kong.cmd.utils.nginx"
 local pl_path = require "pl.path"
 local pl_file = require "pl.file"
 local pl_dir = require "pl.dir"
 
 describe("kong cli utils", function()
 
-  describe("nginx_signals", function()
+  describe("nginx", function()
 
     describe("find_nginx_bin()", function()
       local tmpdir

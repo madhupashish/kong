@@ -23,7 +23,7 @@ local pl_dir = require "pl.dir"
 local log = require "kong.cmd.utils.log"
 local ffi = require "ffi"
 local bit = require "bit"
-local nginx_signals = require "kong.cmd.utils.nginx_signals"
+local nginx = require "kong.cmd.utils.nginx"
 
 
 local getmetatable = getmetatable
@@ -763,7 +763,7 @@ local function prepare_prefix(kong_config, nginx_custom_template_path, skip_writ
   end
 
   -- testing written NGINX conf
-  local ok, err = nginx_signals.check_conf(kong_config)
+  local ok, err = nginx.check_conf(kong_config)
   if not ok then
     return nil, err
   end

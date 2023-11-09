@@ -1,4 +1,4 @@
-local nginx_signals = require "kong.cmd.utils.nginx_signals"
+local nginx = require "kong.cmd.utils.nginx"
 local conf_loader = require "kong.conf_loader"
 local pl_path = require "pl.path"
 local kill = require "kong.cmd.utils.kill"
@@ -33,7 +33,7 @@ local function execute(args)
   end
 
   -- try graceful shutdown (QUIT)
-  assert(nginx_signals.quit(conf))
+  assert(nginx.quit(conf))
 
   log.verbose("waiting for nginx to finish processing requests")
 
@@ -47,7 +47,7 @@ local function execute(args)
 
   if running then
     log.verbose("nginx is still running at %s, forcing shutdown", conf.prefix)
-    assert(nginx_signals.stop(conf))
+    assert(nginx.stop(conf))
     log("Timeout, Kong stopped forcefully")
     return
   end

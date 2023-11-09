@@ -3,7 +3,7 @@ local require = require
 
 local kong_default_conf = require "kong.templates.kong_defaults"
 local process_secrets = require "kong.cmd.utils.process_secrets"
-local nginx_signals = require "kong.cmd.utils.nginx_signals"
+local nginx = require "kong.cmd.utils.nginx"
 local openssl_pkey = require "resty.openssl.pkey"
 local openssl_x509 = require "resty.openssl.x509"
 local pl_stringio = require "pl.stringio"
@@ -746,7 +746,7 @@ local function lookup_dynamic_module_so(mod_name, kong_conf)
     return mod_file
   end
 
-  local nginx_bin = nginx_signals.find_nginx_bin(kong_conf)
+  local nginx_bin = nginx.find_nginx_bin(kong_conf)
   mod_file = fmt("%s/../modules/%s.so", pl_path.dirname(nginx_bin), mod_name)
   if exists(mod_file) then
     log.debug("module '%s' found at '%s'", mod_name, mod_file)

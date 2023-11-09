@@ -1,6 +1,6 @@
 local migrations_utils = require "kong.cmd.utils.migrations"
 local prefix_handler = require "kong.cmd.utils.prefix_handler"
-local nginx_signals = require "kong.cmd.utils.nginx_signals"
+local nginx = require "kong.cmd.utils.nginx"
 local conf_loader = require "kong.conf_loader"
 local kong_global = require "kong.global"
 local kill = require "kong.cmd.utils.kill"
@@ -96,7 +96,7 @@ local function execute(args)
       end
     end
 
-    assert(nginx_signals.start(conf))
+    assert(nginx.start(conf))
 
     log("Kong started")
   end, function(e)
@@ -105,7 +105,7 @@ local function execute(args)
 
   if err then
     log.verbose("could not start Kong, stopping services")
-    pcall(nginx_signals.stop, conf)
+    pcall(nginx.stop, conf)
     log.verbose("stopped services")
     error(err) -- report to main error handler
   end

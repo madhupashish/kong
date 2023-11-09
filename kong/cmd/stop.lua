@@ -1,4 +1,4 @@
-local nginx_signals = require "kong.cmd.utils.nginx_signals"
+local nginx = require "kong.cmd.utils.nginx"
 local conf_loader = require "kong.conf_loader"
 local pl_path = require "pl.path"
 local log = require "kong.cmd.utils.log"
@@ -23,7 +23,7 @@ local function execute(args, opts)
   local conf = assert(conf_loader(default_conf.kong_env, {
     prefix = args.prefix
   }))
-  assert(nginx_signals.stop(conf))
+  assert(nginx.stop(conf))
 
   if opts.quiet then
     log.enable()

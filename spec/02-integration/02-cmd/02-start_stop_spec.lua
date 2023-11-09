@@ -868,7 +868,7 @@ describe("kong start/stop #" .. strategy, function()
         admin_listen  = "127.0.0.1:8001",
       }))
 
-      local nginx, err = require("kong.cmd.utils.nginx_signals").find_nginx_bin()
+      local nginx, err = require("kong.cmd.utils.nginx").find_nginx_bin()
       assert.is_string(nginx, err)
 
       local started

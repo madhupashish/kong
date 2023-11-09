@@ -1,5 +1,5 @@
 local prefix_handler = require "kong.cmd.utils.prefix_handler"
-local nginx_signals = require "kong.cmd.utils.nginx_signals"
+local nginx = require "kong.cmd.utils.nginx"
 local conf_loader = require "kong.conf_loader"
 local kong_global = require "kong.global"
 local pl_path = require "pl.path"
@@ -45,7 +45,7 @@ local function execute(args)
   local db = assert(DB.new(conf))
   assert(db:init_connector())
 
-  assert(nginx_signals.reload(conf))
+  assert(nginx.reload(conf))
 
   log("Kong reloaded")
 end

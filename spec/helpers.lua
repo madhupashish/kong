@@ -64,7 +64,7 @@ local cjson = require "cjson.safe"
 local utils = require "kong.tools.utils"
 local http = require "resty.http"
 local pkey = require "resty.openssl.pkey"
-local nginx_signals = require "kong.cmd.utils.nginx_signals"
+local nginx = require "kong.cmd.utils.nginx"
 local log = require "kong.cmd.utils.log"
 local DB = require "kong.db"
 local ffi = require "ffi"
@@ -103,7 +103,7 @@ end
 -- Ex: `1.11.2.2` -> `11122`
 -- @function openresty_ver_num
 local function openresty_ver_num()
-  local nginx_bin = assert(nginx_signals.find_nginx_bin())
+  local nginx_bin = assert(nginx.find_nginx_bin())
   local _, _, _, stderr = pl_utils.executeex(string.format("%s -V", nginx_bin))
 
   local a, b, c, d = string.match(stderr or "", "openresty/(%d+)%.(%d+)%.(%d+)%.(%d+)")
