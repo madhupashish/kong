@@ -5242,5 +5242,47 @@ do
       assert.same(ctx.route_match_cached, "neg")
     end)
   end)
+
+  describe("Router (flavor = " .. flavor .. ") [http]", function()
+    reload_router(flavor)
+
+    local use_case, router
+
+    lazy_setup(function()
+      use_case = {
+        {
+          service = service,
+          route   = {
+            id = "e8fb37f1-102d-461e-9c51-6608a6bb8101",
+            expression = [[http.host == "www.example.com" && net.port == 8000]],
+            priority = 100,
+          },
+        },
+      }
+    end)
+
+    it("select() should convert 'net.port' to 'net.dst.port' and work well", function()
+      router = assert(new_router(use_case))
+
+      local match_t = router:select("GET", "/", "www.example.com:80")
+      assert.falsy(match_t)
+
+      local match_t = router:select("GET", "/", "www.example.com:8000")
+      assert.truthy(match_t)
+      assert.same(use_case[1].route, match_t.route)
+    end)
+
+    it("exec() should use var.server_port if host has no port", function()
+      router = assert(new_router(use_case))
+
+      local _ngx = mock_ngx("GET", "/foo", { host = "www.example.com" })
+      _ngx.var.server_port = 8000
+      router._set_ngx(_ngx)
+
+      local match_t = router:exec()
+      assert.truthy(match_t)
+      assert.same(use_case[1].route, match_t.route)
+    end)
+  end)
 end   -- local flavor = "expressions"
 
