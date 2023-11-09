@@ -2250,7 +2250,7 @@ for _, flavor in ipairs({ "traditional", "traditional_compatible", "expressions"
           end)
         end)
 
-        describe("match http.headers.*", function()
+        describe("generate http expression", function()
           local use_case
           local get_expression = atc_compat.get_expression
 
@@ -2260,16 +2260,24 @@ for _, flavor in ipairs({ "traditional", "traditional_compatible", "expressions"
                 service = service,
                 route = {
                   id = "e8fb37f1-102d-461e-9c51-6608a6bb8101",
-                  methods = { "GET" },
                 },
               },
             }
           end)
 
-          it("should always add lower()", function()
+          it("should always add lower() when matching http.headers.*", function()
+            use_case[1].route.methods = { "GET" }
             use_case[1].route.headers = { test = { "~*Quote" }, }
 
             assert.equal([[(http.method == r#"GET"#) && (any(lower(http.headers.test)) ~ r#"quote"#)]],
+                         get_expression(use_case[1].route))
+            assert(new_router(use_case))
+          end)
+
+          it("should use net.dst.port when deprecating 'net.port'", function()
+            use_case[1].route.hosts = { "www.example.com:8000" }
+
+            assert.equal([[((http.host == r#"www.example.com"# && net.dst.port == 8000))]],
                          get_expression(use_case[1].route))
             assert(new_router(use_case))
           end)

@@ -217,7 +217,7 @@ local function get_expression(route)
         host = host:sub(1, -2)
       end
 
-      local exp = "http.host ".. op .. " \"" .. host .. "\""
+      local exp = "http.host ".. op .. " r#\"" .. host .. "\"#"
       if port then
         exp = "(" .. exp .. LOGICAL_AND ..
               "net.dst.port ".. OP_EQUAL .. " " .. port .. ")"
