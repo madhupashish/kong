@@ -69,6 +69,9 @@ do
 
     ["Int"]    = {"net.src.port", "net.dst.port",
                  },
+
+    ["IpAddr"] = {"net.src.ip", "net.dst.ip",
+                 },
   }
 
   local STREAM_FIELDS = {

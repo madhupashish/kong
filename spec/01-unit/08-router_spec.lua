@@ -5258,6 +5258,14 @@ do
             priority = 100,
           },
         },
+        {
+          service = service,
+          route   = {
+            id = "e8fb37f1-102d-461e-9c51-6608a6bb8102",
+            expression = [[net.src.ip == 1.1.1.1 && net.dst.ip == 2.2.2.2 && http.method == "GET"]],
+            priority = 100,
+          },
+        },
       }
     end)
 
@@ -5289,6 +5297,26 @@ do
       local match_t = router:exec()
       assert.truthy(match_t)
       assert.same(use_case[1].route, match_t.route)
+    end)
+
+    it("exec() should support net.src.* and net.dst.*", function()
+      router = assert(new_router(use_case))
+
+      local _ngx = mock_ngx("GET", "/foo", { host = "domain.org" })
+      router._set_ngx(_ngx)
+
+      -- no port provided
+      local match_t = router:exec()
+      assert.falsy(match_t)
+
+      -- var.server_port
+      _ngx.var.remote_addr = "1.1.1.1"
+      _ngx.var.server_addr = "2.2.2.2"
+      router._set_ngx(_ngx)
+
+      local match_t = router:exec()
+      assert.truthy(match_t)
+      assert.same(use_case[2].route, match_t.route)
     end)
   end)
 end   -- local flavor = "expressions"
