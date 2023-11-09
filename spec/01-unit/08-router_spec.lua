@@ -2274,7 +2274,7 @@ for _, flavor in ipairs({ "traditional", "traditional_compatible", "expressions"
             assert(new_router(use_case))
           end)
 
-          it("should use net.dst.port when deprecating 'net.port'", function()
+          it("should use 'net.dst.port' when deprecating 'net.port'", function()
             use_case[1].route.hosts = { "www.example.com:8000" }
 
             assert.equal([[((http.host == r#"www.example.com"# && net.dst.port == 8000))]],
@@ -5276,6 +5276,13 @@ do
       router = assert(new_router(use_case))
 
       local _ngx = mock_ngx("GET", "/foo", { host = "www.example.com" })
+      router._set_ngx(_ngx)
+
+      -- no port provided
+      local match_t = router:exec()
+      assert.falsy(match_t)
+
+      -- var.server_port
       _ngx.var.server_port = 8000
       router._set_ngx(_ngx)
 
