@@ -1,0 +1,37 @@
+name: Cherry Pick to remote repository
+on:
+  pull_request_target:
+    types: [closed]
+permissions:
+  contents: write # so it can comment
+  pull-requests: write # so it can create pull requests
+jobs:
+  cross-repo-cherrypick:
+    name: Cherry pick to remote repository
+    runs-on: ubuntu-latest
+    # Don't run on closed unmerged pull requests
+    if: github.event.pull_request.merged
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.FINEGRAINED_PAT }}
+      - name: Create backport pull requests
+        uses: jschmid1/cross-repo-cherrypick-action@807f3f450c82fe6dd40220b1cee0449a3fb26b44
+        with:
+          token: ${{ secrets.FINEGRAINED_PAT }}
+          pull_title: '[cherry-pick -> ${target_branch}] ${pull_title}'
+          merge_commits: 'skip'
+          trigger_label: 'cherry-pick kong-ee' # trigger based on this label
+          pull_description: |-
+            Automated cherry-pick to `${target_branch}`, triggered by a label in https://github.com/${owner}/${repo}/pull/${pull_number} :robot:.
+          upstream_repo: 'kong/kong-ee'
+          branch_map: |-
+            {
+              "release/3.5.x": "next/3.5.x.x",
+              "release/3.4.x": "next/3.4.x.x",
+              "release/3.3.x": "next/3.3.x.x",
+              "release/3.2.x": "next/3.2.x.x",
+              "release/3.1.x": "next/3.1.x.x",
+              "release/3.0.x": "next/3.0.x.x",
+              "release/2.8.x": "next/2.8.x.x"
+            }
