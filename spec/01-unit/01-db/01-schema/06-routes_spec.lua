@@ -1524,12 +1524,25 @@ describe("routes schema (flavor = expressions)", function()
     assert.truthy(Routes:validate(route))
   end)
 
-  it("http route supports net.src.* and net.dst.* fields", function()
+  it("http route supports net.src.* fields", function()
     local route = {
       id             = a_valid_uuid,
       name           = "my_route",
       protocols      = { "https" },
       expression     = [[http.method == "GET" && net.src.ip == 1.2.3.4 && net.src.port == 80]],
+      priority       = 100,
+      service        = { id = another_uuid },
+    }
+    route = Routes:process_auto_fields(route, "insert")
+    assert.truthy(Routes:validate(route))
+  end)
+
+  it("http route supports net.dst.* fields", function()
+    local route = {
+      id             = a_valid_uuid,
+      name           = "my_route",
+      protocols      = { "grpcs" },
+      expression     = [[http.method == "GET" && net.dst.ip == 1.2.3.4 && net.dst.port == 80]],
       priority       = 100,
       service        = { id = another_uuid },
     }
