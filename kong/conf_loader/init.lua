@@ -136,6 +136,11 @@ local cipher_suites = {
 }
 
 
+-- using kong version, "major.minor"
+local LMDB_VALIDATION_TAG = string.match(require("kong.meta").version,
+                                         "^%d+%.%d+")
+
+
 local DEFAULT_PATHS = {
   "/etc/kong/kong.conf",
   "/etc/kong.conf",
@@ -1944,6 +1949,9 @@ local function load(path, custom_conf, opts)
       conf.nginx_main_user = nil
     end
   end
+
+  -- lmdb validation tag
+  conf.lmdb_validation_tag = LMDB_VALIDATION_TAG
 
   -- Wasm module support
   if conf.wasm then
