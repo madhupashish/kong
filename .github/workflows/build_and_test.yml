@@ -123,7 +123,6 @@ jobs:
     name: Postgres ${{ matrix.suite }} - ${{ matrix.split }} tests
     runs-on: ubuntu-22.04
     needs: build
-
     strategy:
       fail-fast: false
       matrix:
@@ -156,7 +155,7 @@ jobs:
           --name kong_redis
 
       zipkin:
-        image: openzipkin/zipkin:2.19
+        image: openzipkin/zipkin:2
         ports:
           - 9411:9411
 
@@ -227,7 +226,7 @@ jobs:
         luarocks --version
         luarocks config
 
-    - name: Generate test rerun filename
+<   - name: Generate test rerun filename
       run: |
            echo FAILED_TEST_FILES_FILE=$(echo '${{ github.run_id }}-${{ matrix.suite }}-${{ matrix.split }}' | tr A-Z a-z | sed -Ee 's/[^a-z0-9]+/-/g').txt >> $GITHUB_ENV
 
@@ -238,8 +237,10 @@ jobs:
       with:
         name: ${{ env.FAILED_TEST_FILES_FILE }}
 
-    - run: ls -l $FAILED_TEST_FILES_FILE
-      continue-on-error: true
+    - name: Tune up postgres max_connections
+      run: |
+        # arm64 runners may use more connections due to more worker cores
+        psql -hlocalhost -Ukong kong -tAc 'alter system set max_connections = 5000;'
 
     - name: Tests
       env:
@@ -285,7 +286,7 @@ jobs:
 
     services:
       grpcbin:
-        image: moul/grpcbin
+        image: kong/grpcbin
         ports:
           - 15002:9000
           - 15003:9001

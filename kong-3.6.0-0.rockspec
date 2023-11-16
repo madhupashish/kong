@@ -173,6 +173,8 @@ build = {
     ["kong.tools.rand"] = "kong/tools/rand.lua",
     ["kong.tools.system"] = "kong/tools/system.lua",
     ["kong.tools.time"] = "kong/tools/time.lua",
+    ["kong.tools.module"] = "kong/tools/module.lua",
+    ["kong.tools.ip"] = "kong/tools/ip.lua",
 
     ["kong.runloop.handler"] = "kong/runloop/handler.lua",
     ["kong.runloop.events"] = "kong/runloop/events.lua",
@@ -198,6 +200,7 @@ build = {
     ["kong.workspaces"] = "kong/workspaces/init.lua",
 
     ["kong.db"] = "kong/db/init.lua",
+    ["kong.db.utils"] = "kong/db/utils.lua",
     ["kong.db.errors"] = "kong/db/errors.lua",
     ["kong.db.iteration"] = "kong/db/iteration.lua",
     ["kong.db.dao"] = "kong/db/dao/init.lua",

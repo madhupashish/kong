@@ -754,6 +754,8 @@ describe("Utils", function()
   end)
 
   describe("gzip_[de_in]flate()", function()
+    local utils = require "kong.tools.gzip"
+
     it("empty string", function()
       local gz = assert(utils.deflate_gzip(""))
       assert.equal(utils.inflate_gzip(gz), "")
@@ -829,7 +831,7 @@ describe("Utils", function()
 
   describe("topological_sort", function()
     local get_neighbors = function(x) return x end
-    local ts = utils.topological_sort
+    local ts = require("kong.db.utils").topological_sort
 
     it("it puts destinations first", function()
       local a = { id = "a" }
